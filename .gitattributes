@@ -1,6 +1,14 @@
-# Treat all JS as generated (excludes from GitHub language stats)
+# Exclude from GitHub language stats
+
+# JavaScript — generated/config files only
 *.js linguist-generated=true
 *.js linguist-detectable=false
+*.mjs linguist-generated=true
+*.mjs linguist-detectable=false
+
+# Docker
+Dockerfile linguist-detectable=false
+*.dockerfile linguist-detectable=false
 
 # Prisma generated client
 src/prisma/prismaClient/** linguist-generated=true
