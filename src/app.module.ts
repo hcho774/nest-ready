@@ -1,9 +1,4 @@
-import {
-  ClassSerializerInterceptor,
-  Module,
-  RequestMethod,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Module, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { ServiceModules } from './services';
@@ -60,12 +55,16 @@ import { PrismaModule } from './prisma/prisma.module';
         };
       },
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: parseInt(process.env.THROTTLE_TTL || '60', 10) * 1000,
-        limit: parseInt(process.env.THROTTLE_LIMIT || '30', 10),
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [
+        {
+          ttl: Number(config.get('THROTTLE_TTL_MS', 60000)),
+          limit: Number(config.get('THROTTLE_LIMIT', 30)),
+        },
+      ],
+    }),
     PrismaModule,
     HealthModule,
     ...ServiceModules,
@@ -83,7 +82,6 @@ import { PrismaModule } from './prisma/prisma.module';
       }),
     },
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
-    { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
   ],
 })
