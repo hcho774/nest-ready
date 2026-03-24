@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma/prismaClient"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator prismaClassGenerator {
+  provider               = "prisma-class-generator"
+  useSwagger             = "false"
+  dryRun                 = "false"
+  separateRelationFields = "true"
+  output                 = "../src/prisma/schema"
+}
+
+// ─── Example Model ────────────────────────────────────────────
+// Replace this with your own domain models.
+// After editing, run:
+//   npx prisma migrate dev --name init
+//   npx prisma generate
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}

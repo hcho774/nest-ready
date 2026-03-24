@@ -1,0 +1,7 @@
+# Treat all JS as generated (excludes from GitHub language stats)
+*.js linguist-generated=true
+*.js linguist-detectable=false
+
+# Prisma generated client
+src/prisma/prismaClient/** linguist-generated=true
+src/prisma/schema/** linguist-generated=true
