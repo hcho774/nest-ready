@@ -3,7 +3,6 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Injectable,
   Type,
 } from '@nestjs/common';
 import { Observable, map } from 'rxjs';
@@ -24,9 +23,10 @@ const SERIALIZE_OPTIONS = {
   enableImplicitConversion: true,
 };
 
-class SerializeInterceptor<T extends object>
-  implements NestInterceptor<SerializableInput<unknown>, SerializableOutput<T>>
-{
+class SerializeInterceptor<T extends object> implements NestInterceptor<
+  SerializableInput<unknown>,
+  SerializableOutput<T>
+> {
   constructor(private readonly classType: Type<T>) {}
 
   private serialize(data: object | object[]): T | T[] {

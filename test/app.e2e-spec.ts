@@ -21,9 +21,7 @@ describe('App (e2e)', () => {
 
   describe('Health', () => {
     it('/health (GET) should return health status', () => {
-      return request(app.getHttpServer())
-        .get('/health')
-        .expect(200);
+      return request(app.getHttpServer()).get('/health').expect(200);
     });
   });
 });

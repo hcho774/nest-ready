@@ -36,12 +36,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           details = msgs;
         }
       }
-    }
-    else if (
+    } else if (
       exception instanceof Error &&
       exception.constructor.name === 'PrismaClientKnownRequestError'
     ) {
-      const prismaError = exception as unknown as { code: string; meta?: { target?: string[] } };
+      const prismaError = exception as unknown as {
+        code: string;
+        meta?: { target?: string[] };
+      };
       switch (prismaError.code) {
         case 'P2002': // Unique constraint
           statusCode = HttpStatus.CONFLICT;
