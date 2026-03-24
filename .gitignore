@@ -35,7 +35,9 @@ dist
 !.env.example
 
 # IDE
-.vscode
+.vscode/*
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea
 
 # OS
