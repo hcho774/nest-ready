@@ -136,6 +136,40 @@ Or per-endpoint:
 findOne() { ... }
 ```
 
+### `@ApiSerializedResponse` — Swagger + Serialization in One
+
+Combines `@ApiResponse` and `@Serialize` into a single decorator so you don't have to apply them separately.
+
+```ts
+import { ApiSerializedResponse } from 'src/common/decorators/api-serialized-response.decorator';
+import { UserResponseDto } from './dto/user-response.dto';
+
+@Controller('users')
+export class UsersController {
+  // Swagger 문서 + 직렬화를 한 번에 적용
+  @Get(':id')
+  @ApiSerializedResponse({ status: 200, responseType: UserResponseDto })
+  findOne() { ... }
+}
+```
+
+`serializeType`을 정적 프로퍼티로 선언하면, 별도 DTO 클래스에 직렬화 타입을 지정할 수 있습니다:
+
+```ts
+// Swagger 문서 타입과 직렬화 타입을 분리하고 싶을 때
+class UserListResponse {
+  static serializeType = UserResponseDto;
+}
+
+@Get()
+@ApiSerializedResponse({ status: 200, responseType: UserListResponse })
+findAll() { ... }
+// → ApiResponse 타입: UserListResponse
+// → 직렬화: UserResponseDto
+```
+
+`serializeType`이 없으면 Swagger 문서 주석만 적용되고 직렬화는 생략됩니다.
+
 ### 3. Response shape
 
 Every response is automatically wrapped by `TransformInterceptor`:
