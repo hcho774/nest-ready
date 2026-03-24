@@ -54,7 +54,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Run migrations
-        run: npx prisma migrate deploy
+        run: npx prisma migrate dev --name init
 
       - name: Unit tests
         run: npm run test
