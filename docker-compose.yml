@@ -28,7 +28,7 @@ services:
       PORT: 3000
       API_KEY: secret-key
       SWAGGER_ENABLED: 'true'
-      THROTTLE_TTL: 60
+      THROTTLE_TTL_MS: 60000
       THROTTLE_LIMIT: 30
     depends_on:
       postgres:
