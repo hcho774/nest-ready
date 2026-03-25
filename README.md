@@ -9,18 +9,20 @@
 
 ## Batteries Included
 
-| | |
+|   |   |
 |---|---|
 | 🔐 **Auth** | API Key guard (Passport) |
 | 🗄 **Database** | PostgreSQL + Prisma ORM |
-| ✅ **Validation** | Global `ValidationPipe` + `class-validator` |
-| 📦 **Serialization** | `@Serialize()` decorator + `@Mask()` for sensitive fields |
+| ✅ **Validation** | Global `ValidationPipe` — whitelist, forbidNonWhitelisted, transform |
+| 📦 **Serialization** | `@Serialize()` interceptor + `@Mask()` for sensitive fields |
 | 🧾 **Response Format** | Standardized `{ success, data, timestamp, requestId }` |
 | 🚨 **Error Handling** | Global exception filter with Prisma error mapping |
 | 📄 **Pagination** | `PaginationQueryDto` + `PaginatedResult<T>` |
-| 📋 **Logging** | Pino — structured, request-scoped, redacted |
-| 🛡 **Security** | Helmet + CORS + Rate limiting |
-| 📖 **API Docs** | Swagger (toggle via env var) |
+| 📋 **Logging** | Pino — structured, request-scoped, redacted (pino-pretty in dev) |
+| 🛡 **Security** | Helmet (CSP) + CORS + Rate limiting (`ThrottlerModule`) |
+| 🗜 **Compression** | gzip / deflate via `compression` |
+| 🔢 **API Versioning** | Header-based versioning (`version` header, default v1) |
+| 📖 **API Docs** | Swagger (toggle via `SWAGGER_ENABLED` env var) |
 | 🏥 **Health Check** | `/health` with DB connectivity |
 | 🐳 **Docker** | Multi-stage Dockerfile + Compose |
 | 🧪 **Testing** | Jest + Supertest (e2e with Postgres CI service) |
@@ -53,6 +55,25 @@ npm run start:dev
 | API | http://localhost:3000/api |
 | Swagger | http://localhost:3000/docs |
 | Health | http://localhost:3000/health |
+
+## Environment Variables
+
+Copy `.env.example` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `DATABASE_URL` | — | PostgreSQL connection string |
+| `NODE_ENV` | `development` | `development` \| `production` |
+| `PORT` | `3000` | HTTP port |
+| `API_KEY` | — | Secret key for the `apiKey` header guard |
+| `THROTTLE_TTL_MS` | `60000` | Rate-limit window in milliseconds |
+| `THROTTLE_LIMIT` | `30` | Max requests per window |
+| `SWAGGER_ENABLED` | `true` | Enable Swagger UI at `/docs` |
+| `CORS_ORIGIN` | `*` | Allowed CORS origin(s) |
 
 ## Add a Module
 
@@ -135,7 +156,6 @@ export class UsersController {
 - `dataType` — the DTO class used for both Swagger schema and serialization
 - `paginated: true` — wraps `data` as an array with a `meta` object in Swagger
 
-
 ### 3. Response shape
 
 Every response is automatically wrapped by `TransformInterceptor`:
@@ -170,8 +190,45 @@ Paginated responses (`{ items, meta }`) are unwrapped automatically:
 | `phone` | `"010-1234-5678"` | `"010-****-5678"` |
 | `full` | `"secret"` | `"******"` |
 
-## Scripts
+## API Versioning
 
+Versioning is handled via the `version` request header (defaults to `v1` when omitted).
+
+```bash
+# Default (version 1)
+curl http://localhost:3000/api/users
+
+# Explicit version
+curl -H "version: 2" http://localhost:3000/api/users
+```
+
+To add a v2 endpoint alongside v1:
+
+```ts
+@Controller({ path: 'users', version: '2' })
+export class UsersV2Controller {}
+```
+
+## Rate Limiting
+
+`ThrottlerModule` is configured globally. Tune limits via `.env`:
+
+```bash
+THROTTLE_TTL_MS=60000   # 1 minute window
+THROTTLE_LIMIT=30       # max 30 requests per window
+```
+
+To skip throttling on a specific handler:
+
+```ts
+import { SkipThrottle } from '@nestjs/throttler';
+
+@SkipThrottle()
+@Get('public')
+publicEndpoint() { ... }
+```
+
+## Scripts
 
 ```bash
 npm run start:dev   # dev server
