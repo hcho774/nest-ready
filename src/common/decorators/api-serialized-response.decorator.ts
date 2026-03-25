@@ -1,42 +1,58 @@
 import { Type, applyDecorators } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiExtraModels, ApiResponse, getSchemaPath } from '@nestjs/swagger';
+import { ApiResponseDto, PaginatedResponseDto } from '../dto/api-response.dto';
 import { Serialize } from '../interceptors/serialize.interceptor';
-
-type SerializedResponseType = Type<unknown> & {
-  serializeType?: Type<object>;
-};
 
 type ApiSerializedResponseOptions = {
   status: number;
-  responseType: SerializedResponseType;
+  dataType: Type<object>;
+  paginated?: boolean;
 };
 
 /**
- * Combines `@ApiResponse` and `@Serialize` into one decorator.
+ * Combines Swagger schema documentation and `@Serialize` serialization into one decorator.
  *
- * If `responseType.serializeType` is set, it also applies the `@Serialize`
- * interceptor so the response is automatically shaped to that DTO.
+ * Documents the full response envelope (`{ success, data, timestamp, requestId }`)
+ * in Swagger and applies serialization via the `SerializeInterceptor`.
  *
  * @example
- * // Without serializeType (plain Swagger annotation only)
- * @ApiSerializedResponse({ status: 200, responseType: UserResponseDto })
+ * // Single object response
+ * @Get(':id')
+ * @ApiSerializedResponse({ status: 200, dataType: UserResponseDto })
+ * findOne() { ... }
  *
- * // With serializeType (Swagger + serialization)
- * class UserListResponseDto {
- *   static serializeType = UserResponseDto;
- * }
- * @ApiSerializedResponse({ status: 200, responseType: UserListResponseDto })
+ * // Paginated response
+ * @Get()
+ * @ApiSerializedResponse({ status: 200, dataType: UserResponseDto, paginated: true })
+ * findAll() { ... }
  */
 export function ApiSerializedResponse({
   status,
-  responseType,
-}: ApiSerializedResponseOptions): MethodDecorator & ClassDecorator {
-  if (responseType.serializeType) {
-    return applyDecorators(
-      ApiResponse({ status, type: responseType }),
-      Serialize(responseType.serializeType),
-    );
-  }
+  dataType,
+  paginated = false,
+}: ApiSerializedResponseOptions) {
+  const envelopeType = paginated ? PaginatedResponseDto : ApiResponseDto;
 
-  return applyDecorators(ApiResponse({ status, type: responseType }));
+  return applyDecorators(
+    ApiExtraModels(envelopeType, dataType),
+    ApiResponse({
+      status,
+      schema: {
+        allOf: [
+          { $ref: getSchemaPath(envelopeType) },
+          {
+            properties: {
+              data: paginated
+                ? {
+                    type: 'array',
+                    items: { $ref: getSchemaPath(dataType) },
+                  }
+                : { $ref: getSchemaPath(dataType) },
+            },
+          },
+        ],
+      },
+    }),
+    Serialize(dataType),
+  );
 }

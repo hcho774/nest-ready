@@ -114,31 +114,7 @@ export class UserResponseDto {
 
 ### 2. Apply to a controller
 
-```ts
-import { Serialize } from 'src/common/interceptors/serialize.interceptor';
-
-@Controller('users')
-@Serialize(UserResponseDto)   // applies to all endpoints in this controller
-export class UsersController {
-  @Get()
-  findAll() { ... }           // returns UserResponseDto[]
-
-  @Get(':id')
-  findOne() { ... }           // returns UserResponseDto
-}
-```
-
-Or per-endpoint:
-
-```ts
-@Get(':id')
-@Serialize(UserResponseDto)
-findOne() { ... }
-```
-
-### `@ApiSerializedResponse` — Swagger + Serialization in One
-
-Combines `@ApiResponse` and `@Serialize` into a single decorator so you don't have to apply them separately.
+Use `@ApiSerializedResponse` to document the Swagger response schema **and** serialize the response in one decorator:
 
 ```ts
 import { ApiSerializedResponse } from 'src/common/decorators/api-serialized-response.decorator';
@@ -146,29 +122,19 @@ import { UserResponseDto } from './dto/user-response.dto';
 
 @Controller('users')
 export class UsersController {
-  // Swagger 문서 + 직렬화를 한 번에 적용
   @Get(':id')
-  @ApiSerializedResponse({ status: 200, responseType: UserResponseDto })
+  @ApiSerializedResponse({ status: 200, dataType: UserResponseDto })
   findOne() { ... }
+
+  @Get()
+  @ApiSerializedResponse({ status: 200, dataType: UserResponseDto, paginated: true })
+  findAll() { ... }
 }
 ```
 
-`serializeType`을 정적 프로퍼티로 선언하면, 별도 DTO 클래스에 직렬화 타입을 지정할 수 있습니다:
+- `dataType` — the DTO class used for both Swagger schema and serialization
+- `paginated: true` — wraps `data` as an array with a `meta` object in Swagger
 
-```ts
-// Swagger 문서 타입과 직렬화 타입을 분리하고 싶을 때
-class UserListResponse {
-  static serializeType = UserResponseDto;
-}
-
-@Get()
-@ApiSerializedResponse({ status: 200, responseType: UserListResponse })
-findAll() { ... }
-// → ApiResponse 타입: UserListResponse
-// → 직렬화: UserResponseDto
-```
-
-`serializeType`이 없으면 Swagger 문서 주석만 적용되고 직렬화는 생략됩니다.
 
 ### 3. Response shape
 
